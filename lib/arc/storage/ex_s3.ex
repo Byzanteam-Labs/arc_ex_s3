@@ -19,10 +19,10 @@ defmodule Arc.Storage.ExS3 do
     url
   end
 
-  def head(%{bucket: bucket, object_key: object_key}) do
+  def head(%{bucket: bucket, key: key}) do
     result =
       bucket
-      |> ExAws.S3.head_object(object_key)
+      |> ExAws.S3.head_object(key)
       |> ExAws.request()
 
     case result do
