@@ -59,7 +59,7 @@ defmodule Arc.Storage.ExS3 do
     %URI{
       scheme: "http",
       host: config.host,
-      port: config.port,
+      port: port,
       path: Path.join("/", bucket)
     }
     |> URI.to_string()
