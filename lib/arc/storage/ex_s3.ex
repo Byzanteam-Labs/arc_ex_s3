@@ -51,6 +51,11 @@ defmodule Arc.Storage.ExS3 do
   def post_object_url(%{bucket: bucket}) do
     config = config()
 
+    port = case config.port do
+      binport when is_binary(binport) -> String.to_integer(binport)
+      port -> port
+    end
+
     %URI{
       scheme: "http",
       host: config.host,
