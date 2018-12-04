@@ -18,6 +18,12 @@ defmodule Arc.Storage.ExS3 do
       scheme = extract_scheme()
       host = Keyword.get(Application.fetch_env!(:ex_aws, :s3), :host)
       port = Keyword.get(Application.fetch_env!(:ex_aws, :s3), :port)
+      port =
+        if is_integer(port) do
+          port
+        else
+          String.to_integer(port)
+        end
 
       bucket = definition.storage_bucket()
       key = definition.storage_key(version, file_and_scope)
@@ -27,7 +33,7 @@ defmodule Arc.Storage.ExS3 do
       %URI{
         scheme: scheme,
         host: host,
-        port: String.to_integer(port),
+        port: port,
         path: Path.join(["/", bucket, key <> Path.extname(file_name)])
       }
       |> URI.to_string()
