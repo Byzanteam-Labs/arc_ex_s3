@@ -1,5 +1,6 @@
 defmodule Arc.Storage.ExS3 do
   @default_expire_time 60*5
+  @valid_schemes ~w{http:// https://}
 
   alias Arc.Storage.S3
 
@@ -8,8 +9,30 @@ defmodule Arc.Storage.ExS3 do
   alias ExAws.Auth.Signatures
 
   defdelegate put(definition, version, file_and_scope), to: S3
-  defdelegate url(definition, version, file_and_scope, options), to: S3
   defdelegate delete(definition, version, file_and_scope), to: S3
+
+  def url(definition, version, file_and_scope, options \\ []) do
+    if Keyword.get(options, :signed) do
+      S3.url(definition, version, file_and_scope, options)
+    else
+      scheme = extract_scheme()
+      host = Keyword.get(Application.fetch_env!(:ex_aws, :s3), :host)
+      port = Keyword.get(Application.fetch_env!(:ex_aws, :s3), :port)
+
+      bucket = definition.storage_bucket()
+      key = definition.storage_key(version, file_and_scope)
+
+      {%{file_name: file_name}, _scope} = file_and_scope
+
+      %URI{
+        scheme: scheme,
+        host: host,
+        port: String.to_integer(port),
+        path: Path.join(["/", bucket, key <> Path.extname(file_name)])
+      }
+      |> URI.to_string()
+    end
+  end
 
   def presigned_put_url(definition, file_and_scope) do
     s3_bucket = definition.storage_bucket()
@@ -63,6 +86,13 @@ defmodule Arc.Storage.ExS3 do
       path: Path.join("/", bucket)
     }
     |> URI.to_string()
+  end
+
+  defp extract_scheme do
+    case Keyword.get(Application.fetch_env!(:ex_aws, :s3), :scheme) do
+      scheme when scheme in @valid_schemes -> String.replace_suffix(scheme, "://", "")
+      _invalid_scheme -> "http"
+    end
   end
 
   #
