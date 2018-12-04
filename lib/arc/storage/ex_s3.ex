@@ -1,5 +1,6 @@
 defmodule Arc.Storage.ExS3 do
   @default_expire_time 60*5
+  @supported_acl ~w{private public_read}a
 
   alias Arc.Storage.S3
 
@@ -40,7 +41,7 @@ defmodule Arc.Storage.ExS3 do
 
     prepared_data =
       case Keyword.get(options, :acl) do
-        :public_read -> Map.put(raw_data, "acl", "public-read")
+        acl when acl in @supported_acl -> Map.put(raw_data, "acl", acl_to_string(acl))
         _ -> raw_data
       end
 
@@ -52,7 +53,7 @@ defmodule Arc.Storage.ExS3 do
       "x-amz-date": Utils.amz_date(datetime),
       "x-amz-signature": Signatures.generate_signature_v4("s3", config, datetime, policy)
     }
-    |> Map.merge(raw_data)
+    |> Map.merge(prepared_data)
   end
 
   def post_object_url(%{bucket: bucket}) do
@@ -74,8 +75,7 @@ defmodule Arc.Storage.ExS3 do
 
   def post_object_policy_conditions(origin_conditions, options) when is_list(origin_conditions) do
     case Keyword.get(options, :acl) do
-      :public_read ->
-        [origin_conditions | %{"acl" => "public-read"}]
+      acl when acl in @supported_acl -> [origin_conditions | %{"acl" => acl_to_string(acl)}]
       _ -> origin_conditions
     end
   end
@@ -87,4 +87,7 @@ defmodule Arc.Storage.ExS3 do
   defp config do
     ExAws.Config.new(:s3, Application.get_all_env(:ex_aws))
   end
+
+  defp acl_to_string(:private), do: "private"
+  defp acl_to_string(:public_read), do: "public-read"
 end
