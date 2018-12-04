@@ -35,8 +35,15 @@ defmodule Arc.Storage.ExS3 do
   # Post Object
   #
 
-  def post_object_auth_data(%{} = raw_data, policy) do
+  def post_object_auth_data(%{} = raw_data, policy, options) do
     config = config()
+
+    prepared_data =
+      case Keyword.get(options, :acl) do
+        :public_read -> Map.put(raw_data, "acl", "public-read")
+        _ -> raw_data
+      end
+
     datetime = :calendar.universal_time
 
     %{
