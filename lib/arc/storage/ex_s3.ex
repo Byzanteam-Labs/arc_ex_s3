@@ -41,7 +41,7 @@ defmodule Arc.Storage.ExS3 do
 
     prepared_data =
       case Keyword.get(options, :acl) do
-        acl when acl in @supported_acl -> Map.put(raw_data, "acl", acl_to_string(acl))
+        acl when acl in @supported_acl -> Map.put(raw_data, :acl, acl_to_string(acl))
         _ -> raw_data
       end
 
