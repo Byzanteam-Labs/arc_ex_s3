@@ -75,7 +75,7 @@ defmodule Arc.Storage.ExS3 do
 
   def post_object_policy_conditions(_definition, origin_conditions, options) when is_list(origin_conditions) do
     case Keyword.get(options, :acl) do
-      acl when acl in @supported_acl -> [origin_conditions | %{"acl" => acl_to_string(acl)}]
+      acl when acl in @supported_acl -> [%{"acl" => acl_to_string(acl)} | origin_conditions]
       _ -> origin_conditions
     end
   end
