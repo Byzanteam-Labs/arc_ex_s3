@@ -65,6 +65,14 @@ defmodule Arc.Storage.ExS3 do
     |> URI.to_string()
   end
 
+  def post_object_policy_conditions(origin_conditions, options) when is_list(origin_conditions) do
+    case Keyword.get(options, :acl) do
+      :public_read ->
+        [origin_conditions | %{"acl" => "public-read"}]
+      _ -> origin_conditions
+    end
+  end
+
   #
   # Helpers
   #
