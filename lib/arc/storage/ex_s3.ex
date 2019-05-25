@@ -1,6 +1,7 @@
 defmodule Arc.Storage.ExS3 do
   @default_expire_time 60*5
   @valid_schemes ~w{http:// https://}
+  @metadata_prefix "x-amz-meta-"
 
   alias Arc.Storage.S3
 
@@ -65,17 +66,31 @@ defmodule Arc.Storage.ExS3 do
   # Post Object
   #
 
-  def post_object_auth_data(%{} = raw_data, policy) do
+  def post_object_policy_conditions(_definition, policy, options) do
+    case Keyword.get(options, :metadata) do
+      nil -> policy
+      metadata when is_list(metadata) or is_map(metadata) ->
+        policy ++ [metadata(metadata)]
+    end
+  end
+
+  def post_object_auth_data(%{} = raw_data, policy, options) do
     config = config()
     datetime = :calendar.universal_time
 
-    %{
+    auth_header = %{
       "x-amz-algorithm": "AWS4-HMAC-SHA256",
       "x-amz-credential": Credentials.generate_credential_v4(:s3, config, datetime),
       "x-amz-date": Utils.amz_date(datetime),
       "x-amz-signature": Signatures.generate_signature_v4("s3", config, datetime, policy)
     }
     |> Map.merge(raw_data)
+
+    case Keyword.get(options, :metadata) do
+      nil -> auth_header
+      metadata when is_list(metadata) or is_map(metadata) ->
+        Map.merge(auth_header, metadata(metadata))
+    end
   end
 
   def post_object_url(%{bucket: bucket}) do
@@ -93,6 +108,14 @@ defmodule Arc.Storage.ExS3 do
       path: Path.join("/", bucket)
     }
     |> URI.to_string()
+  end
+
+  defp metadata(metadata) do
+    metadata
+    |> Enum.map(fn {field, value} ->
+      {@metadata_prefix <> to_string(field), value}
+    end)
+    |> Map.new()
   end
 
   defp extract_scheme do
