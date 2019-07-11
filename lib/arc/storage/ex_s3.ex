@@ -29,14 +29,11 @@ defmodule Arc.Storage.ExS3 do
       bucket = definition.storage_bucket()
       key = definition.storage_key(version, file_and_scope)
 
-      {file, _scope} = file_and_scope
-      file_name = Map.get(file, :file_name)
-
       %URI{
         scheme: scheme,
         host: host,
         port: port,
-        path: Path.join(["/", bucket, key <> Path.extname(file_name)])
+        path: Path.join(["/", bucket, key])
       }
       |> URI.to_string()
     end
