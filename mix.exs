@@ -24,7 +24,6 @@ defmodule ArcExS3.MixProject do
 
   defp deps do
     [
-      {:arc, "~> 0.10.0"},
       {:ex_arc, github: "Byzanteam-Labs/ex_arc", branch: "develop"},
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.0"},
