@@ -2,7 +2,7 @@ defmodule ArcExS3.MixProject do
   use Mix.Project
 
   @project_host "https://github.com/GreenNerd-Labs/arc_ex_s3"
-  @version "0.0.2"
+  @version "0.0.3"
 
   def project do
     [
