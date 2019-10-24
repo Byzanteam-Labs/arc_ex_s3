@@ -93,13 +93,14 @@ defmodule Arc.Storage.ExS3 do
   def post_object_url(%{bucket: bucket}) do
     config = config()
 
+    scheme = extract_scheme()
     port = case config.port do
       binport when is_binary(binport) -> String.to_integer(binport)
       port -> port
     end
 
     %URI{
-      scheme: "http",
+      scheme: scheme,
       host: config.host,
       port: port,
       path: Path.join("/", bucket)
@@ -116,7 +117,7 @@ defmodule Arc.Storage.ExS3 do
   end
 
   defp extract_scheme do
-    case Keyword.get(Application.fetch_env!(:ex_aws, :s3), :scheme) do
+    case config()[:scheme] do
       scheme when scheme in @valid_schemes -> String.replace_suffix(scheme, "://", "")
       _invalid_scheme -> "http"
     end
